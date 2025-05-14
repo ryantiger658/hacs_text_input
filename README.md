@@ -1,46 +1,98 @@
-# Notice
+Custom Content Integration for Home Assistant
+This custom integration for Home Assistant allows you to store large blocks of text with a title and automatically tracks the last update time. The content can then be displayed in markdown cards on your dashboards.
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+Features
+Store large blocks of text/markdown content
+Track when content was last updated
+Set a title for your content
+Update content via service calls
+Easy integration with dashboard markdown cards
+Installation
+HACS Installation (Recommended)
+Make sure HACS is installed in your Home Assistant instance.
+Add this repository as a custom repository in HACS:
+Go to HACS > Integrations
+Click the three dots in the upper right corner
+Select "Custom repositories"
+Add the URL of this repository and select "Integration" as the category
+Click "Install" on the Custom Content integration card
+Restart Home Assistant
+Manual Installation
+Download the latest release from the repository
+Create a custom_components/custom_content directory in your Home Assistant configuration folder
+Extract the contents of the release into the custom_content directory
+Restart Home Assistant
+Configuration
+Using the UI
+Go to Configuration > Integrations
+Click the "Add Integration" button
+Search for "Custom Content"
+Follow the setup wizard
+Using YAML Configuration
+Add the following to your configuration.yaml:
 
-HAVE FUN! 😎
+yaml
+sensor:
+  - platform: custom_content
+    name: "My Content"  # Name of the sensor
+    initial_title: "Welcome"  # Initial title for the content
+    initial_content: |  # Initial content (can be blank)
+      # Welcome to my dashboard
+      This is some **markdown** content that can be quite large.
+Usage
+Updating Content via Service
+You can update the content and title using the custom_content.update_content service:
 
-## Why?
+yaml
+service: custom_content.update_content
+data:
+  entity_id: sensor.my_content
+  content: |
+    # New Content
+    This is the updated content with **markdown** formatting.
+    
+    ## It can have headers
+    
+    - And lists
+    - Of items
+  title: "New Title"  # Optional
+Displaying Content in a Dashboard
+Create a markdown card in your dashboard:
 
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
+yaml
+type: markdown
+content: |
+  # {{ states('sensor.my_content') }}
+  Last updated: {{ state_attr('sensor.my_content', 'last_updated') }}
+  
+  {{ state_attr('sensor.my_content', 'content') }}
+Or just display the content without the title:
 
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
+yaml
+type: markdown
+content: "{{ state_attr('sensor.my_content', 'content') }}"
+Example Automation
+Here's an example automation to update content on a schedule:
 
-## What?
+yaml
+automation:
+  - alias: "Update Dashboard Content Daily"
+    trigger:
+      platform: time
+      at: "06:00:00"
+    action:
+      service: custom_content.update_content
+      data:
+        entity_id: sensor.my_content
+        title: "Daily Update - {{ now().strftime('%Y-%m-%d') }}"
+        content: |
+          # Daily Dashboard Update
+          
+          Today is {{ now().strftime('%A, %B %d') }}
+          
+          ## Reminders:
+          - Take out the trash
+          - Water the plants
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-This repository contains multiple files, here is a overview:
-
-File | Purpose | Documentation
--- | -- | --
-`.devcontainer.json` | Used for development/testing with Visual Studio Code. | [Documentation](https://code.visualstudio.com/docs/remote/containers)
-`.github/ISSUE_TEMPLATE/*.yml` | Templates for the issue tracker | [Documentation](https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository)
-`custom_components/integration_blueprint/*` | Integration files, this is where everything happens. | [Documentation](https://developers.home-assistant.io/docs/creating_component_index)
-`CONTRIBUTING.md` | Guidelines on how to contribute. | [Documentation](https://help.github.com/en/github/building-a-strong-community/setting-guidelines-for-repository-contributors)
-`LICENSE` | The license file for the project. | [Documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository)
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions. | [Documentation](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
-`requirements.txt` | Python packages used for development/lint/testing this integration. | [Documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files)
-
-## How?
-
-1. Create a new repository in GitHub, using this repository as a template by clicking the "Use this template" button in the GitHub UI.
-1. Open your new repository in Visual Studio Code devcontainer (Preferably with the "`Dev Containers: Clone Repository in Named Container Volume...`" option).
-1. Rename all instances of the `integration_blueprint` to `custom_components/<your_integration_domain>` (e.g. `custom_components/awesome_integration`).
-1. Rename all instances of the `Integration Blueprint` to `<Your Integration Name>` (e.g. `Awesome Integration`).
-1. Run the `scripts/develop` to start HA and test out your new integration.
-
-## Next steps
-
-These are some next steps you may want to look into:
-- Add tests to your integration, [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) can help you get started.
-- Add brand images (logo/icon) to https://github.com/home-assistant/brands.
-- Create your first release.
-- Share your integration on the [Home Assistant Forum](https://community.home-assistant.io/).
-- Submit your integration to [HACS](https://hacs.xyz/docs/publish/start).
