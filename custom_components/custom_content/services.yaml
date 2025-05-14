@@ -13,11 +13,6 @@ update_content:
       example: |
         # Title
         This is some markdown content.
-        
-        ## Subtitle
-        
-        - List item 1
-        - List item 2
       selector:
         text:
           multiline: true

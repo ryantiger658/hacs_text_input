@@ -33,22 +33,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services
     async def handle_update_content(call: ServiceCall) -> None:
         """Handle the service call to update content."""
-        entity_id = call.data.get("entity_id")
         content = call.data.get("content")
         title = call.data.get("title")
         
-        # Find the entity
-        entity = None
-        for entry_id, stored_entity in hass.data[DOMAIN].items():
-            if stored_entity.entity_id == entity_id:
-                entity = stored_entity
-                break
-        
-        if entity:
-            await entity.async_update_content(content, title)
-            _LOGGER.debug(f"Updated content for {entity_id}")
+        # Check if target is used
+        if call.target:
+            entity_ids = [entity for entity in call.target.get("entity_id", [])]
         else:
-            _LOGGER.error(f"Entity {entity_id} not found")
+            # Fallback to data
+            entity_ids = [call.data.get("entity_id")]
+        
+        for entity_id in entity_ids:
+            # Find the entity
+            entity = None
+            for entry_id, stored_entity in hass.data[DOMAIN].items():
+                if stored_entity.entity_id == entity_id:
+                    entity = stored_entity
+                    break
+            
+            if entity:
+                await entity.async_update_content(content, title)
+                _LOGGER.debug(f"Updated content for {entity_id}")
+            else:
+                _LOGGER.error(f"Entity {entity_id} not found")    
     
     # Register service
     hass.services.async_register(
@@ -56,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_UPDATE_CONTENT,
         handle_update_content,
         schema=UPDATE_CONTENT_SCHEMA,
+        supports_response=False,
+        supports_target=True,  # Add this line to support targeting
     )
     
     return True
