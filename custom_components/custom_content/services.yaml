@@ -1,21 +1,31 @@
 update_content:
   name: Update Content
   description: Update the content and optionally the title of a Custom Markdown entity
+  target:
+    entity:
+      integration: custom_markdown
+      domain: sensor
   fields:
-    entity_id:
-      name: Entity ID
-      description: The entity ID of the content to update
-      required: true
-      selector:
-        entity:
-          domain: sensor
     content:
       name: Content
       description: The markdown content to be stored
       required: true
-      example: "# Title\nThis is some markdown content."
+      example: |
+        # Title
+        This is some markdown content.
+        
+        ## Subtitle
+        
+        - List item 1
+        - List item 2
+      selector:
+        text:
+          multiline: true
     title:
       name: Title
       description: The title of the content (optional)
       required: false
       example: "Dashboard Information"
+      selector:
+        text:
+          multiline: false
