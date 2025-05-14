@@ -36,27 +36,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         content = call.data.get("content")
         title = call.data.get("title")
         
-        # Check if target is used
-        if call.target:
-            entity_ids = [entity for entity in call.target.get("entity_id", [])]
-        else:
-            # Fallback to data
-            entity_ids = [call.data.get("entity_id")]
+        # Try to get entity_id from both places
+        entity_id = call.data.get("entity_id")
         
-        for entity_id in entity_ids:
-            # Find the entity
-            entity = None
-            for entry_id, stored_entity in hass.data[DOMAIN].items():
-                if stored_entity.entity_id == entity_id:
-                    entity = stored_entity
+        # If not in data, check if it might be in the "target" structure
+        if not entity_id and hasattr(call, "data_parts"):
+            # This is a way to access the target in older HA versions
+            for data_part in call.data_parts:
+                if isinstance(data_part, dict) and "entity_id" in data_part:
+                    entity_id = data_part["entity_id"]
                     break
-            
-            if entity:
-                await entity.async_update_content(content, title)
-                _LOGGER.debug(f"Updated content for {entity_id}")
-            else:
-                _LOGGER.error(f"Entity {entity_id} not found")    
-    
+        
+        if not entity_id:
+            _LOGGER.error("No entity_id provided in service call")
+            return
+        
+        # Find the entity
+        entity = None
+        for entry_id, stored_entity in hass.data[DOMAIN].items():
+            if stored_entity.entity_id == entity_id:
+                entity = stored_entity
+                break
+        
+        if entity:
+            await entity.async_update_content(content, title)
+            _LOGGER.debug(f"Updated content for {entity_id}")
+        else:
+            _LOGGER.error(f"Entity {entity_id} not found")
+
     # Register service
     hass.services.async_register(
         DOMAIN,
@@ -64,7 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         handle_update_content,
         schema=UPDATE_CONTENT_SCHEMA,
         supports_response=False,
-        supports_target=True,  # Add this line to support targeting
     )
     
     return True
