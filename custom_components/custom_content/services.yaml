@@ -3,8 +3,8 @@ update_content:
   description: Update the content and optionally the title of a Custom Markdown entity
   target:
     entity:
-      integration: custom_markdown
       domain: sensor
+      integration: custom_markdown
   fields:
     content:
       name: Content

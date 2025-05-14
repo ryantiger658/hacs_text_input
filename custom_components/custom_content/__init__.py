@@ -8,7 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN, DEFAULT_NAME
 
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
-# Service call schema for updating content
+# Service call schema for updating content - NO entity_id here
 SERVICE_UPDATE_CONTENT = "update_content"
 UPDATE_CONTENT_SCHEMA = vol.Schema({
     vol.Required("content"): cv.string,
@@ -30,35 +31,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Forward the setup to the sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
+    # Get all the entities from our domain once setup is done
+    all_entities = {}
+    
+    # Store the entity after it's created
+    def store_entity(entity):
+        """Store an entity for service calls."""
+        all_entities[entity.entity_id] = entity
+    
+    # Track when entities are added
+    async def async_track_entity_added(entity):
+        """Track when entities are added."""
+        store_entity(entity)
+    
+    # Add current entities
+    for entry_id, entity in hass.data[DOMAIN].items():
+        store_entity(entity)
+    
     # Register service
-    @verify_domain_control(hass, DOMAIN)
     async def handle_update_content(call: ServiceCall) -> None:
         """Handle the service call to update content."""
         content = call.data["content"]
         title = call.data.get("title")
         
-        # Get target entity IDs
-        if not call.target:
-            _LOGGER.error("No target provided in service call")
-            return
-            
-        # Now process each entity
-        for entity_id in call.target["entity_id"]:
-            # Find the entity
-            entity = None
-            for entry_id, stored_entity in hass.data[DOMAIN].items():
-                if stored_entity.entity_id == entity_id:
-                    entity = stored_entity
-                    break
-            
-            if entity:
+        # Handle entity_ids from service.target
+        for entity_id in call.target.get("entity_id", []):
+            if entity_id in all_entities:
+                entity = all_entities[entity_id]
                 await entity.async_update_content(content, title)
                 _LOGGER.debug(f"Updated content for {entity_id}")
             else:
                 _LOGGER.error(f"Entity {entity_id} not found")
     
-    # Register service with target support
-    hass.services.async_register(
+    # Register admin service - this properly handles targeting
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_UPDATE_CONTENT,
         handle_update_content,
