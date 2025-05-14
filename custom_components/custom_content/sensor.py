@@ -1,4 +1,4 @@
-"""Sensor platform for Custom Content integration."""
+"""Sensor platform for Custom Markdown integration."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,11 +7,18 @@ from typing import Any, Optional
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, async_get_current_platform
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
+# Define the update service
+SERVICE_UPDATE_CONTENT = "update_content"
+SERVICE_SCHEMA = {
+    vol.Required("content"): cv.string,
+    vol.Optional("title"): cv.string,
+}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -19,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    entity = CustomContentSensor(
+    entity = CustomMarkdownSensor(
         config_entry.data["name"],
         config_entry.data["initial_title"],
         config_entry.data["initial_content"],
@@ -31,10 +38,18 @@ async def async_setup_entry(
     hass.data[DOMAIN][config_entry.entry_id] = entity
     
     async_add_entities([entity])
+    
+    # Register the service on this platform
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_CONTENT,
+        SERVICE_SCHEMA,
+        "async_update_content",
+    )
 
 
-class CustomContentSensor(SensorEntity):
-    """Representation of a Custom Content sensor."""
+class CustomMarkdownSensor(SensorEntity):
+    """Representation of a Custom Markdown sensor."""
 
     def __init__(self, name: str, initial_title: str, initial_content: str) -> None:
         """Initialize the sensor."""
@@ -45,7 +60,7 @@ class CustomContentSensor(SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{name.lower().replace(' ', '_')}"
     
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str:
         """Return the value of the sensor."""
         return self._title
 
@@ -63,9 +78,8 @@ class CustomContentSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:text-box"
     
-    @callback
     async def async_update_content(self, content: str, title: Optional[str] = None) -> None:
-        """Update content and timestamp."""
+        """Update content and timestamp. This is called by the service."""
         self._content = content
         if title:
             self._title = title
