@@ -19,8 +19,8 @@ Click "Install" on the Custom Content integration card
 Restart Home Assistant
 Manual Installation
 Download the latest release from the repository
-Create a custom_components/custom_content directory in your Home Assistant configuration folder
-Extract the contents of the release into the custom_content directory
+Create a custom_components/custom_markdown directory in your Home Assistant configuration folder
+Extract the contents of the release into the custom_markdown directory
 Restart Home Assistant
 Configuration
 Using the UI
@@ -33,7 +33,7 @@ Add the following to your configuration.yaml:
 
 yaml
 sensor:
-  - platform: custom_content
+  - platform: custom_markdown
     name: "My Content"  # Name of the sensor
     initial_title: "Welcome"  # Initial title for the content
     initial_content: |  # Initial content (can be blank)
@@ -41,10 +41,10 @@ sensor:
       This is some **markdown** content that can be quite large.
 Usage
 Updating Content via Service
-You can update the content and title using the custom_content.update_content service:
+You can update the content and title using the custom_markdown.update_content service:
 
 yaml
-service: custom_content.update_content
+service: custom_markdown.update_content
 data:
   entity_id: sensor.my_content
   content: |
@@ -81,7 +81,7 @@ automation:
       platform: time
       at: "06:00:00"
     action:
-      service: custom_content.update_content
+      service: custom_markdown.update_content
       data:
         entity_id: sensor.my_content
         title: "Daily Update - {{ now().strftime('%Y-%m-%d') }}"

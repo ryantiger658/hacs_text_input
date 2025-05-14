@@ -3,7 +3,7 @@ update_content:
   description: Update the content and optionally the title of a Custom Content entity
   target:
     entity:
-      integration: custom_content
+      integration: custom_markdown
       domain: sensor
   fields:
     content:

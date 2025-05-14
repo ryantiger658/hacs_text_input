@@ -1,4 +1,4 @@
-"""Constants for the Custom Content integration."""
+"""Constants for the Custom Markdown integration."""
 
-DOMAIN = "custom_content"
-DEFAULT_NAME = "Custom Content"
+DOMAIN = "custom_markdown"
+DEFAULT_NAME = "Custom Markdown"

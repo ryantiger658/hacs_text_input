@@ -1,11 +1,11 @@
 {
-  "domain": "custom_content",
-  "name": "Custom Content",
-  "documentation": "https://github.com/yourusername/custom_content",
+  "domain": "custom_markdown",
+  "name": "Custom Markdown",
+  "documentation": "https://github.com/ryantiger658/hacs_custom_markdown",
   "dependencies": [],
-  "codeowners": ["@yourusername"],
+  "codeowners": ["@ryantiger658"],
   "requirements": [],
   "config_flow": true,
   "iot_class": "calculated",
-  "version": "1.0.0"
+  "version": "0.0.2"
 }
